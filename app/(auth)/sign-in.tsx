@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, router } from "expo-router";
 import { Alert, StyleSheet, View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import { Text, TextInput, Button, Card } from "react-native-paper";
+import { Text, TextInput, Button, Card, Banner } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuthStore } from "@/stores/auth-store";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { colors } from "@/theme/colors";
 import { spacing } from "@/theme/spacing";
 
@@ -15,6 +16,13 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async () => {
+    if (!isSupabaseConfigured) {
+      Alert.alert(
+        "Backend not configured",
+        "Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to your .env file, then restart Expo."
+      );
+      return;
+    }
     if (!email.trim() || !password) {
       Alert.alert("Validation Error", "Please fill in all fields");
       return;
@@ -40,6 +48,18 @@ export default function SignInScreen() {
         style={styles.container}
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* ── Backend-not-configured banner ── */}
+          {!isSupabaseConfigured && (
+            <Banner
+              visible
+              icon="alert-circle"
+              style={styles.banner}
+              actions={[]}
+            >
+              {"No backend connected. Create a .env file with your Supabase credentials to enable login. See the setup guide for details."}
+            </Banner>
+          )}
+
           <View style={styles.header}>
             <Ionicons name="paw" size={80} color={colors.surface} />
             <Text variant="headlineLarge" style={styles.title}>
@@ -103,54 +123,34 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
+  gradient: { flex: 1 },
+  container: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
     padding: spacing.lg,
     gap: spacing.xl,
   },
+  banner: {
+    borderRadius: 12,
+    marginBottom: spacing.sm,
+  },
   header: {
     alignItems: "center",
     gap: spacing.md,
     marginBottom: spacing.xl,
   },
-  title: {
-    color: colors.surface,
-    fontWeight: "800",
-    textAlign: "center",
-  },
-  subtitle: {
-    color: colors.surface + "CC",
-    textAlign: "center",
-  },
-  card: {
-    borderRadius: 20,
-    elevation: 8,
-  },
-  cardContent: {
-    gap: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  input: {
-    backgroundColor: colors.surface,
-  },
-  button: {
-    marginTop: spacing.sm,
-    paddingVertical: 6,
-  },
+  title: { color: colors.surface, fontWeight: "800", textAlign: "center" },
+  subtitle: { color: colors.surface + "CC", textAlign: "center" },
+  card: { borderRadius: 20, elevation: 8 },
+  cardContent: { gap: spacing.md, paddingVertical: spacing.md },
+  input: { backgroundColor: colors.surface },
+  button: { marginTop: spacing.sm, paddingVertical: 6 },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     marginTop: spacing.lg,
   },
-  footerText: {
-    color: colors.surface,
-  },
+  footerText: { color: colors.surface },
 });
