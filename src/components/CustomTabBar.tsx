@@ -10,19 +10,14 @@ interface CustomTabBarProps {
 }
 
 const tabConfig = [
-  { name: 'index',    label: 'Home',    icon: 'home-outline',    activeIcon: 'home' },
-  { name: 'adoption', label: 'Adopt',   icon: 'heart-outline',   activeIcon: 'heart' },
-  { name: 'health',   label: 'Health',  icon: 'fitness-outline', activeIcon: 'fitness' },
-  { name: 'vets',     label: 'Vets',    icon: 'medical-outline', activeIcon: 'medical' },
-  { name: 'profile',  label: 'Profile', icon: 'person-outline',  activeIcon: 'person' },
+  { name: 'index',     label: 'Home',      icon: 'home-outline',        activeIcon: 'home' },
+  { name: 'health',    label: 'Health',    icon: 'fitness-outline',     activeIcon: 'fitness' },
+  { name: 'community', label: 'Community', icon: 'chatbubbles-outline',  activeIcon: 'chatbubbles' },
+  { name: 'vets',      label: 'Vets',      icon: 'medical-outline',     activeIcon: 'medical' },
+  { name: 'profile',   label: 'Profile',   icon: 'person-outline',      activeIcon: 'person' },
 ];
 
 export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
-  // Only render tabs that are in our tabConfig
-  const visibleRoutes = state.routes.filter((route: any) =>
-    tabConfig.some((t) => t.name === route.name)
-  );
-
   return (
     <View style={styles.tabBarContainer}>
       <View style={styles.tabBar}>
@@ -53,7 +48,7 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
               <Ionicons
                 name={(isFocused ? tab.activeIcon : tab.icon) as any}
                 size={22}
-                color={isFocused ? colors.surface : colors.onSurfaceVariant}
+                color={isFocused ? colors.onPrimary : colors.onSurfaceVariant}
               />
               <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
                 {tab.label}
@@ -72,18 +67,19 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 12,
     right: 12,
-    alignItems: 'center',
+    zIndex: 999,
+    elevation: 24,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.onSurface,
     borderRadius: 28,
     padding: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
     shadowRadius: 16,
-    elevation: 10,
+    elevation: 24,
     width: '100%',
   },
   tab: {
@@ -98,11 +94,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   tabLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '600',
-    color: colors.onSurfaceVariant,
+    color: colors.outlineVariant,
   },
   tabLabelActive: {
-    color: colors.surface,
+    color: colors.onPrimary,
+    fontSize: 9,
   },
 });

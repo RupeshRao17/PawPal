@@ -30,8 +30,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (!supabase || !isSupabaseConfigured) {
       return { error: getSupabaseConfigError() };
     }
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error as Error | null };
+   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+if (!error && data.session) {
+  set({ session: data.session }); // ← syncs the store immediately
+}
+return { error: error as Error | null };
   },
   signUp: async ({ fullName, email, password }) => {
     if (!supabase || !isSupabaseConfigured) {
