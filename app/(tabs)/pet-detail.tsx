@@ -38,6 +38,7 @@ export default function PetDetailScreen() {
   };
 
   const isAdoptable = !!pet.listingId;
+  const isMyListing = !!pet.listingId && pet.shelterId === userId;
 
   // ── Unique private channel ID for this inquiry ───────────────────────────
   // Format: adopt_{listingId}_{applicantId}  (consistent, private to this pair)
@@ -192,7 +193,24 @@ export default function PetDetailScreen() {
 
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
-        {isAdoptable ? (
+        {isMyListing ? (
+          /* Poster view — see enquiries in Chats tab */
+          <View style={styles.bottomBtnRow}>
+            <View style={[styles.myListingBadge, { flex: 1 }]}>
+              <Ionicons name="bookmark" size={18} color={colors.primary} />
+              <Text style={styles.myListingText}>Your Listing</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.primaryBtn, { flex: 2 }]}
+              activeOpacity={0.85}
+              onPress={() => router.push("/(tabs)/chats")}
+            >
+              <Ionicons name="mail-open" size={20} color={colors.onSecondary} />
+              <Text style={styles.primaryBtnText}>View Enquiries</Text>
+            </TouchableOpacity>
+          </View>
+        ) : isAdoptable ? (
+          /* Adopter view */
           <View style={styles.bottomBtnRow}>
             <TouchableOpacity
               style={[styles.primaryBtn, { flex: 1 }]}
@@ -332,6 +350,8 @@ const styles = StyleSheet.create({
   primaryBtn:  { backgroundColor: colors.secondary, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingVertical: 16, borderRadius: 28, gap: 10 },
   primaryBtnText: { fontSize: 16, fontWeight: "700", color: colors.onSecondary },
   chatIconBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primaryContainer, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: colors.primary + "30" },
+  myListingBadge: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: colors.primaryContainer, borderRadius: 28, paddingVertical: 16, borderWidth: 1.5, borderColor: colors.primary + "40" },
+  myListingText: { fontWeight: "700", fontSize: 14, color: colors.primary },
 
   // Modal
   modalOverlay:  { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },

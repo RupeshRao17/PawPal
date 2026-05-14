@@ -12,14 +12,14 @@ interface CustomTabBarProps {
 const tabConfig = [
   { name: 'index',     label: 'Home',      icon: 'home-outline',        activeIcon: 'home' },
   { name: 'health',    label: 'Health',    icon: 'fitness-outline',     activeIcon: 'fitness' },
-  { name: 'community', label: 'Community', icon: 'chatbubbles-outline',  activeIcon: 'chatbubbles' },
+  { name: 'community', label: 'Community', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
   { name: 'vets',      label: 'Vets',      icon: 'medical-outline',     activeIcon: 'medical' },
-  { name: 'profile',   label: 'Profile',   icon: 'person-outline',      activeIcon: 'person' },
+  { name: 'chats',     label: 'Chats',     icon: 'mail-outline',        activeIcon: 'mail' },
 ];
 
 export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
   return (
-    <View style={styles.tabBarContainer}>
+    <View style={styles.wrapper}>
       <View style={styles.tabBar}>
         {tabConfig.map((tab) => {
           const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
@@ -28,14 +28,8 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
           const route = state.routes[routeIndex];
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
-            }
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
           };
 
           return (
@@ -48,9 +42,9 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
               <Ionicons
                 name={(isFocused ? tab.activeIcon : tab.icon) as any}
                 size={22}
-                color={isFocused ? colors.onPrimary : colors.onSurfaceVariant}
+                color={isFocused ? colors.onPrimary : colors.outlineVariant}
               />
-              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
+              <Text style={[styles.label, isFocused && styles.labelActive]}>
                 {tab.label}
               </Text>
             </TouchableOpacity>
@@ -62,7 +56,7 @@ export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarPro
 }
 
 const styles = StyleSheet.create({
-  tabBarContainer: {
+  wrapper: {
     position: 'absolute',
     bottom: 20,
     left: 12,
@@ -80,7 +74,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 16,
     elevation: 24,
-    width: '100%',
   },
   tab: {
     flex: 1,
@@ -90,16 +83,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     gap: 3,
   },
-  tabActive: {
-    backgroundColor: colors.primary,
-  },
-  tabLabel: {
-    fontSize: 9,
-    fontWeight: '600',
-    color: colors.outlineVariant,
-  },
-  tabLabelActive: {
-    color: colors.onPrimary,
-    fontSize: 9,
-  },
+  tabActive: { backgroundColor: colors.primary },
+  label:     { fontSize: 9, fontWeight: '600', color: colors.outlineVariant },
+  labelActive: { color: colors.onPrimary },
 });

@@ -470,7 +470,7 @@ const styles = StyleSheet.create({
   dividerLine:     { flex: 1, height: 1, backgroundColor: colors.outlineVariant + "60" },
   dividerLabel:    { fontSize: 11, fontWeight: "700", color: colors.onSurfaceVariant, textTransform: "uppercase", letterSpacing: 1 },
   // FAB
-  fab:             { position: "absolute", bottom: 90, right: spacing.md, backgroundColor: colors.primary },
+  fab: { position: "absolute", bottom: 90, left: spacing.md, backgroundColor: colors.primary },
   // Modals
   modalOverlay:    { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: spacing.lg },
   modalCard:       { borderRadius: 20 },
