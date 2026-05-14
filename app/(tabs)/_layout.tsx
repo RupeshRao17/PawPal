@@ -30,6 +30,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="list-pet"   options={{ href: null }} />
         <Tabs.Screen name="pet-detail" options={{ href: null }} />
         <Tabs.Screen name="pets"       options={{ href: null }} />
+        <Tabs.Screen name="adopt-chat" options={{ href: null }} />
         <Tabs.Screen name="pawbot"     options={{ href: null }} />
       </Tabs>
       <FloatingPawBot />

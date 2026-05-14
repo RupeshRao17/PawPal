@@ -369,6 +369,6 @@ const styles = StyleSheet.create({
   safetyHeader: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   safetyTitle:  { fontSize: 16, fontWeight: "700", color: colors.onSecondaryContainer },
   safetyText:   { fontSize: 13, lineHeight: 20, color: colors.onSecondaryContainer + "CC" },
-  bottomBar:  { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: colors.surface + "F5", padding: spacing.md, paddingBottom: spacing.xl, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40" },
+  bottomBar:  { position: "absolute", bottom: 90, left: 0, right: 0, backgroundColor: colors.surface + "F5", padding: spacing.md, paddingBottom: spacing.xl, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40" },
   submitBtn:  { borderRadius: 28 },
 });
