@@ -340,7 +340,7 @@ export default function CommunityScreen() {
       )}
 
       {/* Input bar */}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}>
         <View style={styles.inputBar}>
           <RNTextInput
             style={styles.msgInput}
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   chatHeaderSub:   { color: colors.onSurfaceVariant },
 
   // Messages
-  messageList: { paddingHorizontal: spacing.md, paddingTop: spacing.md },
+  messageList: { paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.md },
   emptyChat:   { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 80, gap: spacing.sm },
   emptyChatEmoji: { fontSize: 48 },
   emptyChatTitle: { fontSize: 18, fontWeight: "700", color: colors.onSurface },
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: spacing.sm,
     paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    paddingBottom: Platform.OS === "ios" ? 28 : spacing.md,
+    paddingBottom: Platform.OS === "ios" ? 116 : 104,   // clear fixed tab bar (bottom:20 + ~84px height)
     backgroundColor: colors.surface, borderTopWidth: 1,
     borderTopColor: colors.outlineVariant + "40",
   },

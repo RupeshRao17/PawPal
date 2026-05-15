@@ -98,13 +98,15 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text variant="titleLarge" style={styles.headerTitle}>PawPal</Text>
+          <Text variant="titleLarge" style={styles.headerTitle}>Discover</Text>
           <Text variant="bodySmall" style={styles.headerSub}>Find your forever companion</Text>
         </View>
-        <TouchableOpacity onPress={() => router.push("/(tabs)/profile")}>
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person" size={20} color={colors.primary} />
-          </View>
+        <TouchableOpacity
+          style={styles.chatIconBtn}
+          onPress={() => router.push("/(tabs)/chats")}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chatbubbles-outline" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -248,7 +250,7 @@ const styles = StyleSheet.create({
   header:          { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: spacing.md, marginBottom: spacing.md },
   headerTitle:     { fontWeight: "800", color: colors.onSurface },
   headerSub:       { color: colors.onSurfaceVariant },
-  avatarPlaceholder: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryContainer, alignItems: "center", justifyContent: "center" },
+  chatIconBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primaryContainer, alignItems: "center", justifyContent: "center" },
   searchBar:       { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginHorizontal: spacing.md, marginBottom: spacing.md, backgroundColor: colors.surfaceContainerHighest, borderRadius: 16, padding: spacing.md },
   searchText:      { color: colors.onSurfaceVariant + "99", flex: 1 },
   listBanner:      { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginHorizontal: spacing.md, marginBottom: spacing.md, backgroundColor: colors.primaryContainer, borderRadius: 16, padding: spacing.md, borderWidth: 1, borderColor: colors.primary + "30" },

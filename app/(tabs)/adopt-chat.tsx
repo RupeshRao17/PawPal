@@ -183,7 +183,7 @@ export default function AdoptChatScreen() {
       )}
 
       {/* Input */}
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}>
         <View style={styles.inputBar}>
           <RNTextInput
             style={styles.input}
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   bubbleTextMe:{ color: colors.onPrimary },
   timeText:    { fontSize: 10, color: colors.onSurfaceVariant, marginLeft: 4 },
   timeTextMe:  { marginLeft: 0, marginRight: 4, textAlign: "right" },
-  inputBar:    { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, paddingBottom: Platform.OS === "ios" ? 28 : spacing.md, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40" },
+  inputBar:    { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, paddingBottom: Platform.OS === "ios" ? 116 : 104, backgroundColor: colors.surface, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40" },
   input:       { flex: 1, minHeight: 42, maxHeight: 110, backgroundColor: colors.surfaceContainerHighest, borderRadius: 22, paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: colors.onSurface },
   sendBtn:     { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.primary, alignItems: "center", justifyContent: "center" },
   sendBtnOff:  { backgroundColor: colors.primary + "50" },

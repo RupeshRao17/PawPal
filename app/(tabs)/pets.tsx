@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   genderChip: { backgroundColor: colors.secondary + "15" },
   dobChip: { backgroundColor: colors.surfaceVariant },
   petActions: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm },
-  fab: { position: "absolute", bottom: 90, right: spacing.md, backgroundColor: colors.primary },
+  fab: { position: "absolute", bottom: 90, left: spacing.md, backgroundColor: colors.primary },
   bottomPadding: { height: 100 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", padding: spacing.lg },
   modalCard: { borderRadius: 20 },

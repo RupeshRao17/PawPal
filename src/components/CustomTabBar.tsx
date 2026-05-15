@@ -1,56 +1,69 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
 
-interface CustomTabBarProps {
-  state: any;
-  descriptors: any;
-  navigation: any;
-}
+interface Props { state: any; descriptors: any; navigation: any; }
 
-const tabConfig = [
-  { name: 'index',     label: 'Home',      icon: 'home-outline',        activeIcon: 'home' },
-  { name: 'health',    label: 'Health',    icon: 'fitness-outline',     activeIcon: 'fitness' },
-  { name: 'community', label: 'Community', icon: 'chatbubbles-outline', activeIcon: 'chatbubbles' },
-  { name: 'vets',      label: 'Vets',      icon: 'medical-outline',     activeIcon: 'medical' },
-  { name: 'chats',     label: 'Chats',     icon: 'mail-outline',        activeIcon: 'mail' },
+const LEFT_TABS = [
+  { name: 'index',     label: 'Discover',   icon: 'compass-outline',     activeIcon: 'compass' },
+  { name: 'community', label: 'Community',  icon: 'chatbubbles-outline',  activeIcon: 'chatbubbles' },
+];
+const RIGHT_TABS = [
+  { name: 'pets',    label: 'My Pets',  icon: 'paw-outline',    activeIcon: 'paw' },
+  { name: 'profile', label: 'Profile',  icon: 'person-outline', activeIcon: 'person' },
 ];
 
-export function CustomTabBar({ state, descriptors, navigation }: CustomTabBarProps) {
+export function CustomTabBar({ state, navigation }: Props) {
+  function press(routeName: string) {
+    const idx = state.routes.findIndex((r: any) => r.name === routeName);
+    if (idx === -1) return;
+    const isFocused = state.index === idx;
+    const event = navigation.emit({ type: 'tabPress', target: state.routes[idx].key, canPreventDefault: true });
+    if (!isFocused && !event.defaultPrevented) navigation.navigate(routeName);
+  }
+
+  function isFocused(name: string) {
+    const idx = state.routes.findIndex((r: any) => r.name === name);
+    return state.index === idx;
+  }
+
+  function TabBtn({ name, label, icon, activeIcon }: typeof LEFT_TABS[0]) {
+    const active = isFocused(name);
+    if (state.routes.findIndex((r: any) => r.name === name) === -1) return null;
+    return (
+      <TouchableOpacity style={[styles.tab, active && styles.tabActive]} onPress={() => press(name)} activeOpacity={0.7}>
+        <Ionicons name={(active ? activeIcon : icon) as any} size={21} color={active ? colors.onPrimary : colors.outlineVariant} />
+        <Text style={[styles.label, active && styles.labelActive]}>{label}</Text>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
-      <View style={styles.tabBar}>
-        {tabConfig.map((tab) => {
-          const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
-          if (routeIndex === -1) return null;
-          const isFocused = state.index === routeIndex;
-          const route = state.routes[routeIndex];
+      <View style={styles.pill}>
+        {/* Left tabs */}
+        <View style={styles.half}>
+          {LEFT_TABS.map((t) => <TabBtn key={t.name} {...t} />)}
+        </View>
 
-          const onPress = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
-          };
+        {/* Center gap */}
+        <View style={styles.gap} />
 
-          return (
-            <TouchableOpacity
-              key={tab.name}
-              onPress={onPress}
-              style={[styles.tab, isFocused && styles.tabActive]}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name={(isFocused ? tab.activeIcon : tab.icon) as any}
-                size={22}
-                color={isFocused ? colors.onPrimary : colors.outlineVariant}
-              />
-              <Text style={[styles.label, isFocused && styles.labelActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
+        {/* Right tabs */}
+        <View style={styles.half}>
+          {RIGHT_TABS.map((t) => <TabBtn key={t.name} {...t} />)}
+        </View>
       </View>
+
+      {/* Center + FAB */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('list-pet')}
+      >
+        <Ionicons name="add" size={30} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -61,29 +74,48 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 12,
     right: 12,
+    alignItems: 'center',
     zIndex: 999,
     elevation: 24,
   },
-  tabBar: {
+  pill: {
     flexDirection: 'row',
     backgroundColor: colors.onSurface,
     borderRadius: 28,
     padding: 6,
+    width: '100%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.22,
     shadowRadius: 16,
-    elevation: 24,
+    elevation: 20,
   },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 9,
-    borderRadius: 22,
-    gap: 3,
-  },
+  half:  { flex: 1, flexDirection: 'row' },
+  gap:   { width: 64 },  // space for center FAB
+  tab:   { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 9, borderRadius: 22, gap: 3 },
   tabActive: { backgroundColor: colors.primary },
   label:     { fontSize: 9, fontWeight: '600', color: colors.outlineVariant },
   labelActive: { color: colors.onPrimary },
+  fab: {
+    position: 'absolute',
+    bottom: 10,               // center button pops 10px above the pill top
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 12,
+    zIndex: 1000,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    // White ring border
+    borderWidth: 3,
+    borderColor: colors.background,
+    // Pop above pill: pill height ≈ 68px, button is 56px, placed at bottom:10 inside wrapper (wrapper bottom edge = pill bottom)
+    // So button bottom is at 10px, top at 66px → sticks above 68px pill by ~2px → use marginTop trick instead
+    transform: [{ translateY: -18 }],  // pull it up above the pill
+  },
 });
