@@ -222,9 +222,12 @@ export default function HomeScreen() {
                           </Chip>
                         )}
                       </View>
-                      <Text style={styles.listCardBreed} numberOfLines={1}>
-                        {item.pets?.breed ?? item.pets?.species} • {ageFromDob(item.pets?.dob ?? null)}
-                      </Text>
+                      <View style={styles.breedIconRow}>
+                        <Ionicons name="paw-outline" size={12} color={colors.onSurfaceVariant} />
+                        <Text style={styles.listCardBreed} numberOfLines={1}>
+                          {item.pets?.breed ?? item.pets?.species} • {ageFromDob(item.pets?.dob ?? null)}
+                        </Text>
+                      </View>
                       <View style={styles.listCardLocation}>
                         <Ionicons name="location-outline" size={13} color={colors.onSurfaceVariant} />
                         <Text style={styles.listCardCity}>{item.city}</Text>
@@ -297,6 +300,7 @@ const styles = StyleSheet.create({
   genderChip:      { backgroundColor: colors.secondaryContainer, height: 22 },
   genderChipText:  { fontSize: 10, color: colors.onSecondaryContainer },
   listCardBreed:   { color: colors.onSurfaceVariant, fontSize: 12 },
+  breedIconRow:    { flexDirection: "row", alignItems: "center", gap: 4 },
   listCardLocation:{ flexDirection: "row", alignItems: "center", gap: 3 },
   listCardCity:    { fontSize: 12, color: colors.onSurfaceVariant },
   adoptPill:       { alignSelf: "flex-start", backgroundColor: colors.primaryContainer, paddingHorizontal: spacing.sm, paddingVertical: 5, borderRadius: 10 },
