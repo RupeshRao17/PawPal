@@ -55,6 +55,8 @@ export default function ListPetScreen() {
   const [desc,      setDesc]      = useState("");
   const [assets,    setAssets]    = useState<any[]>([]); // full picker asset objects
   const [loading,   setLoading]   = useState(false);
+  const [gender,    setGender]    = useState<"male"|"female"|"">("male");
+  const [dob,       setDob]       = useState("");
 
   // Vaccination + medical history
   type VaxEntry = { name: string; date: string; nextDue: string };
@@ -103,7 +105,7 @@ export default function ListPetScreen() {
       // 1. Insert pet record
       const { data: pet, error: petErr } = await supabase
         .from("pets")
-        .insert({ name: petName.trim(), species, breed: breed.trim(), owner_id: session.user.id, notes: desc.trim() || null })
+        .insert({ name: petName.trim(), species, breed: breed.trim(), owner_id: session.user.id, notes: desc.trim() || null, gender: gender || null, dob: dob.trim() || null })
         .select().single();
       if (petErr) throw petErr;
 
@@ -146,7 +148,7 @@ export default function ListPetScreen() {
         { text: "Go to Discover", onPress: () => router.replace("/(tabs)") },
       ]);
       setPetName(""); setBreed(""); setCity(""); setDesc(""); setAssets([]);
-      setVaccines([]); setMedHistory("");
+      setVaccines([]); setMedHistory(""); setGender("male"); setDob("");
     } catch (err: any) {
       Alert.alert("Failed", err.message);
     } finally {
@@ -202,6 +204,42 @@ export default function ListPetScreen() {
             style={styles.input} left={<TextInput.Icon icon="dna" />} placeholder="e.g. Golden Retriever Mix" />
           <TextInput label="City / Location *" mode="outlined" value={city} onChangeText={setCity}
             style={styles.input} left={<TextInput.Icon icon="map-marker" />} placeholder="e.g. Mumbai" />
+        </View>
+
+        {/* Gender + DOB */}
+        <View style={styles.section}>
+          <Text style={styles.label}>GENDER &amp; DATE OF BIRTH</Text>
+
+          {/* Gender toggle */}
+          <View style={styles.genderRow}>
+            {(["male", "female"] as const).map((g) => (
+              <TouchableOpacity
+                key={g}
+                style={[styles.genderBtn, gender === g && styles.genderBtnActive]}
+                onPress={() => setGender(g)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.genderBtnText, gender === g && styles.genderBtnTextActive]}>
+                  {g === "male" ? "♂  Male" : "♀  Female"}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Date of Birth */}
+          <TextInput
+            label="Date of Birth (YYYY-MM-DD)"
+            mode="outlined"
+            value={dob}
+            onChangeText={setDob}
+            style={styles.input}
+            keyboardType="numeric"
+            placeholder="e.g. 2022-06-15"
+            left={<TextInput.Icon icon="calendar" />}
+          />
+          <Text style={styles.dobHint}>
+            Age will be calculated automatically from the date of birth.
+          </Text>
         </View>
 
         {/* Species */}
@@ -326,6 +364,12 @@ const styles = StyleSheet.create({
   optionTextActive: { color: colors.primary },
   safetyCard:  { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, backgroundColor: colors.primaryContainer + "50", marginHorizontal: spacing.md, padding: spacing.lg, borderRadius: 16 },
   safetyText:  { flex: 1, fontSize: 13, lineHeight: 20, color: colors.onSurfaceVariant },
+  genderRow:    { flexDirection: "row", gap: spacing.sm },
+  genderBtn:    { flex: 1, paddingVertical: 14, borderRadius: 14, backgroundColor: colors.surfaceContainerHigh, alignItems: "center", borderWidth: 2, borderColor: "transparent" },
+  genderBtnActive: { backgroundColor: colors.primaryContainer, borderColor: colors.primary + "50" },
+  genderBtnText:   { fontWeight: "700", fontSize: 15, color: colors.onSurfaceVariant },
+  genderBtnTextActive: { color: colors.primary },
+  dobHint:      { fontSize: 11, color: colors.onSurfaceVariant, marginTop: -4 },
   vaxCard:     { backgroundColor: colors.surfaceContainerLow, borderRadius: 14, padding: spacing.md, marginBottom: spacing.sm, gap: spacing.xs },
   vaxCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs },
   vaxCardTitle:  { fontWeight: "700", color: colors.onSurface, fontSize: 13 },

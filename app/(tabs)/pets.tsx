@@ -26,6 +26,19 @@ const SPECIES = [
 ];
 const GENDER_OPTIONS = ["male", "female"];
 
+function ageFromDob(dob: string | null): string {
+  if (!dob) return "";
+  const months =
+    (new Date().getFullYear() - new Date(dob).getFullYear()) * 12 +
+    (new Date().getMonth()    - new Date(dob).getMonth());
+  if (months <  1) return "Newborn";
+  if (months < 12) return `${months} month${months > 1 ? "s" : ""} old`;
+  const yrs = Math.floor(months / 12);
+  const rem  = months % 12;
+  if (rem === 0) return `${yrs} year${yrs > 1 ? "s" : ""} old`;
+  return `${yrs}y ${rem}m old`;
+}
+
 function speciesCfg(s: string) {
   return SPECIES.find((x) => x.key === s) ?? SPECIES[4];
 }
@@ -210,7 +223,7 @@ export default function PetsScreen() {
                   {pet.dob && (
                     <View style={styles.breedRow}>
                       <Ionicons name="calendar-outline" size={13} color={colors.onSurfaceVariant} />
-                      <Text style={styles.breedText}>Born {pet.dob}</Text>
+                      <Text style={styles.breedText}>{ageFromDob(pet.dob)}</Text>
                     </View>
                   )}
 
