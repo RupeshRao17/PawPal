@@ -21,8 +21,6 @@ const SPECIES_OPTIONS = [
   { key: "rabbit", label: "Rabbit", icon: "paw" },
   { key: "other",  label: "Other",  icon: "ellipsis-horizontal" },
 ];
-const AGE_OPTIONS = ["Puppy / Kitten", "Young (1–3 yrs)", "Adult (3–7 yrs)", "Senior (7+ yrs)"];
-
 // Upload using ArrayBuffer — most reliable approach in React Native
 async function uploadAsset(asset: any, petId: string, index: number): Promise<string | null> {
   if (!supabase) return null;
@@ -54,10 +52,20 @@ export default function ListPetScreen() {
   const [breed,     setBreed]     = useState("");
   const [city,      setCity]      = useState("");
   const [species,   setSpecies]   = useState("dog");
-  const [age,       setAge]       = useState("Young (1–3 yrs)");
   const [desc,      setDesc]      = useState("");
   const [assets,    setAssets]    = useState<any[]>([]); // full picker asset objects
   const [loading,   setLoading]   = useState(false);
+
+  // Vaccination + medical history
+  type VaxEntry = { name: string; date: string; nextDue: string };
+  const [vaccines,   setVaccines]   = useState<VaxEntry[]>([]);
+  const [medHistory, setMedHistory] = useState("");
+
+  function addVax()       { setVaccines((p) => [...p, { name: "", date: "", nextDue: "" }]); }
+  function removeVax(i: number) { setVaccines((p) => p.filter((_, idx) => idx !== i)); }
+  function updateVax(i: number, field: keyof VaxEntry, val: string) {
+    setVaccines((p) => p.map((v, idx) => idx === i ? { ...v, [field]: val } : v));
+  }
 
   async function pickImage() {
     if (!ImagePicker) {
@@ -109,7 +117,25 @@ export default function ListPetScreen() {
         }
       }
 
-      // 3. Create adoption listing
+      // 3. Insert vaccination history
+      const validVax = vaccines.filter((v) => v.name.trim() && v.date.trim());
+      if (validVax.length > 0) {
+        await supabase.from("health_vaccinations").insert(
+          validVax.map((v) => ({
+            pet_id:          pet.id,
+            vaccine_name:    v.name.trim(),
+            administered_on: v.date.trim(),
+            next_due_on:     v.nextDue.trim() || null,
+          }))
+        );
+      }
+
+      // 4. Save medical history into pets.notes
+      if (medHistory.trim()) {
+        await supabase.from("pets").update({ notes: medHistory.trim() }).eq("id", pet.id);
+      }
+
+      // 5. Create adoption listing
       const { error: listErr } = await supabase.from("adoption_listings").insert({
         pet_id: pet.id, shelter_id: session.user.id,
         status: "available", description: desc.trim() || null, city: city.trim(),
@@ -120,6 +146,7 @@ export default function ListPetScreen() {
         { text: "Go to Discover", onPress: () => router.replace("/(tabs)") },
       ]);
       setPetName(""); setBreed(""); setCity(""); setDesc(""); setAssets([]);
+      setVaccines([]); setMedHistory("");
     } catch (err: any) {
       Alert.alert("Failed", err.message);
     } finally {
@@ -190,26 +217,62 @@ export default function ListPetScreen() {
             ))}
           </View>
         </View>
-
-        {/* Age */}
-        <View style={styles.section}>
-          <Text style={styles.label}>AGE RANGE</Text>
-          <View style={styles.optionRow}>
-            {AGE_OPTIONS.map((a) => (
-              <TouchableOpacity key={a} style={[styles.ageBtn, age === a && styles.optionActive]}
-                onPress={() => setAge(a)} activeOpacity={0.8}>
-                <Text style={[styles.optionText, age === a && styles.optionTextActive]}>{a}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* Description */}
         <View style={styles.section}>
           <Text style={styles.label}>ABOUT THIS PET</Text>
           <TextInput label="Describe personality, health, ideal home…" mode="outlined"
             value={desc} onChangeText={setDesc} multiline numberOfLines={4}
             style={[styles.input, { minHeight: 100 }]} />
+        </View>
+
+        {/* ── Vaccination History ── */}
+        <View style={styles.section}>
+          <Text style={styles.label}>VACCINATION HISTORY <Text style={styles.labelSub}>(optional)</Text></Text>
+
+          {vaccines.map((v, i) => (
+            <View key={i} style={styles.vaxCard}>
+              <View style={styles.vaxCardHeader}>
+                <Text style={styles.vaxCardTitle}>Vaccination {i + 1}</Text>
+                <TouchableOpacity onPress={() => removeVax(i)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <Ionicons name="trash-outline" size={18} color={colors.error} />
+                </TouchableOpacity>
+              </View>
+              <TextInput
+                label="Vaccine Name *" mode="outlined"
+                value={v.name} onChangeText={(t) => updateVax(i, "name", t)}
+                style={styles.input} left={<TextInput.Icon icon="shield-check" />}
+                placeholder="e.g. Rabies, DHPPiL"
+              />
+              <TextInput
+                label="Date Given * (YYYY-MM-DD)" mode="outlined"
+                value={v.date} onChangeText={(t) => updateVax(i, "date", t)}
+                style={styles.input} keyboardType="numeric"
+                left={<TextInput.Icon icon="calendar" />}
+              />
+              <TextInput
+                label="Next Due Date (YYYY-MM-DD, optional)" mode="outlined"
+                value={v.nextDue} onChangeText={(t) => updateVax(i, "nextDue", t)}
+                style={styles.input} keyboardType="numeric"
+                left={<TextInput.Icon icon="calendar-clock" />}
+              />
+            </View>
+          ))}
+
+          <TouchableOpacity style={styles.addRowBtn} onPress={addVax} activeOpacity={0.8}>
+            <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+            <Text style={styles.addRowBtnText}>Add Vaccination Record</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Medical History ── */}
+        <View style={styles.section}>
+          <Text style={styles.label}>MEDICAL HISTORY <Text style={styles.labelSub}>(optional)</Text></Text>
+          <TextInput
+            label="Any conditions, allergies, surgeries or ongoing medications…"
+            mode="outlined" value={medHistory} onChangeText={setMedHistory}
+            multiline numberOfLines={4}
+            style={[styles.input, { minHeight: 100 }]}
+          />
         </View>
 
         <View style={styles.safetyCard}>
@@ -263,6 +326,11 @@ const styles = StyleSheet.create({
   optionTextActive: { color: colors.primary },
   safetyCard:  { flexDirection: "row", alignItems: "flex-start", gap: spacing.md, backgroundColor: colors.primaryContainer + "50", marginHorizontal: spacing.md, padding: spacing.lg, borderRadius: 16 },
   safetyText:  { flex: 1, fontSize: 13, lineHeight: 20, color: colors.onSurfaceVariant },
+  vaxCard:     { backgroundColor: colors.surfaceContainerLow, borderRadius: 14, padding: spacing.md, marginBottom: spacing.sm, gap: spacing.xs },
+  vaxCardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs },
+  vaxCardTitle:  { fontWeight: "700", color: colors.onSurface, fontSize: 13 },
+  addRowBtn:   { flexDirection: "row", alignItems: "center", gap: spacing.sm, paddingVertical: spacing.md, paddingHorizontal: spacing.sm, borderRadius: 12, borderWidth: 1.5, borderStyle: "dashed", borderColor: colors.primary + "60", justifyContent: "center" },
+  addRowBtnText: { color: colors.primary, fontWeight: "700", fontSize: 14 },
   bottomBar:   { position: "absolute", bottom: 90, left: 0, right: 0, backgroundColor: colors.surface + "F8", padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40" },
   submitBtn:   { borderRadius: 28 },
 });

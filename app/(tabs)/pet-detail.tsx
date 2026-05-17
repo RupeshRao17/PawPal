@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert, Image, Modal, ScrollView, StatusBar,
   StyleSheet, TextInput as RNTextInput,
@@ -18,24 +18,48 @@ export default function PetDetailScreen() {
   const session = useAuthStore((s) => s.session);
   const userId  = session?.user?.id ?? "";
 
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [isFavorite,    setIsFavorite]    = useState(false);
+  const [modalVisible,  setModalVisible]  = useState(false);
+  const [message,       setMessage]       = useState("");
+  const [sending,       setSending]       = useState(false);
+  const [sent,          setSent]          = useState(false);
+  const [vaccinations,  setVaccinations]  = useState<any[]>([]);
+  const [medNotes,      setMedNotes]      = useState("");
+  const [loadingHealth, setLoadingHealth] = useState(false);
 
   const pet = {
-    name:        String(params.name       ?? "Buddy"),
-    breed:       String(params.breed      ?? "Unknown"),
-    age:         String(params.age        ?? "Unknown"),
-    gender:      String(params.gender     ?? "Unknown"),
-    location:    String(params.location   ?? "Unknown"),
-    image:       String(params.image      ?? "https://images.unsplash.com/photo-1552053831-71594a27632d?w=1200"),
+    name:        String(params.name        ?? "Buddy"),
+    breed:       String(params.breed       ?? "Unknown"),
+    age:         String(params.age         ?? ""),
+    gender:      String(params.gender      ?? ""),
+    location:    String(params.location    ?? "Unknown"),
+    image:       String(params.image       ?? "https://images.unsplash.com/photo-1552053831-71594a27632d?w=1200"),
     description: String(params.description ?? ""),
-    listingId:   String(params.listingId  ?? ""),
-    shelterId:   String(params.shelterId  ?? ""),
+    petId:       String(params.petId       ?? ""),
+    listingId:   String(params.listingId   ?? ""),
+    shelterId:   String(params.shelterId   ?? ""),
     shelterName: String(params.shelterName ?? "Shelter"),
   };
+
+  // Fetch health records when petId is available
+  useEffect(() => {
+    if (!pet.petId || !supabase) return;
+    setLoadingHealth(true);
+    Promise.all([
+      supabase.from("health_vaccinations")
+        .select("vaccine_name, administered_on, next_due_on")
+        .eq("pet_id", pet.petId)
+        .order("administered_on", { ascending: false }),
+      supabase.from("pets")
+        .select("notes")
+        .eq("id", pet.petId)
+        .maybeSingle(),
+    ]).then(([vaxRes, petRes]) => {
+      setVaccinations((vaxRes.data as any[]) ?? []);
+      setMedNotes((petRes.data as any)?.notes ?? "");
+      setLoadingHealth(false);
+    });
+  }, [pet.petId]);
 
   const isAdoptable = !!pet.listingId;
   const isMyListing = !!pet.listingId && pet.shelterId === userId;
@@ -172,6 +196,54 @@ export default function PetDetailScreen() {
             </View>
           </View>
         ) : null}
+
+        {/* Health Records section */}
+        {(loadingHealth || vaccinations.length > 0 || medNotes) && (
+          <View style={styles.section}>
+            <View style={styles.aboutHeader}>
+              <View style={styles.accentBar} />
+              <Text style={styles.sectionTitle}>Health Records</Text>
+            </View>
+            {loadingHealth ? (
+              <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: 8 }} />
+            ) : (
+              <View style={styles.healthBox}>
+                {vaccinations.length > 0 && (
+                  <View style={styles.healthBlock}>
+                    <View style={styles.healthBlockHeader}>
+                      <Ionicons name="shield-checkmark" size={16} color={colors.success} />
+                      <Text style={styles.healthBlockTitle}>Vaccinations</Text>
+                    </View>
+                    {vaccinations.map((v: any, i: number) => (
+                      <View key={i} style={styles.vaxRow}>
+                        <View style={styles.vaxDot} />
+                        <View style={styles.vaxInfo}>
+                          <Text style={styles.vaxName}>{v.vaccine_name}</Text>
+                          <Text style={styles.vaxDate}>
+                            Given: {v.administered_on}
+                            {v.next_due_on ? `  ·  Next: ${v.next_due_on}` : ""}
+                          </Text>
+                        </View>
+                        <View style={styles.vaxBadge}>
+                          <Text style={styles.vaxBadgeText}>✓</Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {medNotes ? (
+                  <View style={[styles.healthBlock, vaccinations.length > 0 && { marginTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "40", paddingTop: spacing.md }]}>
+                    <View style={styles.healthBlockHeader}>
+                      <Ionicons name="document-text-outline" size={16} color={colors.primary} />
+                      <Text style={styles.healthBlockTitle}>Medical History</Text>
+                    </View>
+                    <Text style={styles.medText}>{medNotes}</Text>
+                  </View>
+                ) : null}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Contact / Adopt CTA (only if listing exists) */}
         {isAdoptable && (
@@ -356,6 +428,19 @@ const styles = StyleSheet.create({
   myListingBadge: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, backgroundColor: colors.primaryContainer, borderRadius: 28, paddingVertical: 16, borderWidth: 1.5, borderColor: colors.primary + "40" },
   myListingText: { fontWeight: "700", fontSize: 14, color: colors.primary },
 
+  // Health records
+  healthBox:         { backgroundColor: "#fff", borderRadius: 16, padding: spacing.md },
+  healthBlock:       { gap: spacing.sm },
+  healthBlockHeader: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  healthBlockTitle:  { fontSize: 14, fontWeight: "700", color: colors.onSurface },
+  vaxRow:            { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, paddingVertical: 6 },
+  vaxDot:            { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success, marginTop: 5 },
+  vaxInfo:           { flex: 1 },
+  vaxName:           { fontSize: 14, fontWeight: "700", color: colors.onSurface },
+  vaxDate:           { fontSize: 12, color: colors.onSurfaceVariant, marginTop: 2 },
+  vaxBadge:          { width: 22, height: 22, borderRadius: 11, backgroundColor: colors.success + "20", alignItems: "center", justifyContent: "center" },
+  vaxBadgeText:      { fontSize: 12, fontWeight: "700", color: colors.success },
+  medText:           { fontSize: 14, lineHeight: 22, color: colors.onSurfaceVariant },
   // Modal
   modalOverlay:  { flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" },
   modalSheet:    { backgroundColor: colors.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: spacing.lg, paddingBottom: 48, gap: spacing.md },
