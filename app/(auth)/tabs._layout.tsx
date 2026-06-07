@@ -1,7 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { View } from "react-native";
 import { CustomTabBar } from "@/components/CustomTabBar";
-import { FloatingPawBot } from "@/components/FloatingPawBot";
 import { useAuthStore } from "@/stores/auth-store";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -34,7 +33,6 @@ export default function TabsLayout() {
         <Tabs.Screen name="community"  options={{ href: null }} />
         <Tabs.Screen name="pawbot"     options={{ href: null }} />
       </Tabs>
-      <FloatingPawBot />
     </View>
   );
 }

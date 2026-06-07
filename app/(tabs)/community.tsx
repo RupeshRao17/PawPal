@@ -65,7 +65,10 @@ export default function CommunityScreen() {
   const [activeCom,     setActiveCom]     = useState<Community | null>(null);
   const [messages,      setMessages]      = useState<Message[]>([]);
   const [newMsg,        setNewMsg]        = useState("");
+  const PAGE_SIZE = 40;
   const [loadingList,   setLoadingList]   = useState(true);
+  const [hasMoreMsgs,   setHasMoreMsgs]   = useState(false);
+  const [loadingMore,   setLoadingMore]   = useState(false);
   const [loadingChat,   setLoadingChat]   = useState(false);
   const [sending,       setSending]       = useState(false);
   const [joiningId,     setJoiningId]     = useState<string | null>(null);
@@ -137,11 +140,30 @@ export default function CommunityScreen() {
       .from("messages")
       .select("*, profiles(full_name, avatar_url)")
       .eq("channel_id", communityId)
-      .order("sent_at", { ascending: true })
-      .limit(60);
-    setMessages((data as Message[]) ?? []);
+      .order("sent_at", { ascending: false })
+      .limit(PAGE_SIZE);
+    const msgs = ((data as Message[]) ?? []).reverse();
+    setMessages(msgs);
+    setHasMoreMsgs((data?.length ?? 0) >= PAGE_SIZE);
     setLoadingChat(false);
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: false }), 100);
+  }
+
+  async function loadEarlierMessages() {
+    if (!supabase || !activeCom || messages.length === 0 || loadingMore) return;
+    setLoadingMore(true);
+    const oldest = messages[0].sent_at;
+    const { data } = await supabase
+      .from("messages")
+      .select("*, profiles(full_name, avatar_url)")
+      .eq("channel_id", activeCom.id)
+      .lt("sent_at", oldest)
+      .order("sent_at", { ascending: false })
+      .limit(PAGE_SIZE);
+    const earlier = ((data as Message[]) ?? []).reverse();
+    setMessages((prev) => [...earlier, ...prev]);
+    setHasMoreMsgs((data?.length ?? 0) >= PAGE_SIZE);
+    setLoadingMore(false);
   }
 
   // ── Realtime subscription ────────────────────────────────────────────────────
@@ -292,6 +314,16 @@ export default function CommunityScreen() {
           keyExtractor={(m) => m.id}
           contentContainerStyle={styles.messageList}
           showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            hasMoreMsgs ? (
+              <TouchableOpacity style={styles.loadEarlierBtn} onPress={loadEarlierMessages} disabled={loadingMore} activeOpacity={0.7}>
+                {loadingMore
+                  ? <ActivityIndicator size="small" color={colors.primary} />
+                  : <Text style={styles.loadEarlierTxt}>↑ Load earlier messages</Text>
+                }
+              </TouchableOpacity>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.emptyChat}>
               <Text style={styles.emptyChatEmoji}>{activeCom!.emoji}</Text>
@@ -491,6 +523,8 @@ const styles = StyleSheet.create({
   msgTime:     { fontSize: 10, color: colors.onSurfaceVariant, marginLeft: 4 },
   msgTimeMe:   { marginLeft: 0, marginRight: 4, textAlign: "right" },
 
+  loadEarlierBtn: { alignItems: "center", paddingVertical: 14, marginBottom: 4 },
+  loadEarlierTxt: { fontSize: 13, color: colors.primary, fontWeight: "600" },
   // Input bar
   inputBar: {
     flexDirection: "row", alignItems: "flex-end", gap: spacing.sm,

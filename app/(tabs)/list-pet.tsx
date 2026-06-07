@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import { useAuthStore } from "@/stores/auth-store";
 import { isSupabaseConfigured, OFFLINE_HINT, supabase } from "@/lib/supabase";
 import { colors } from "@/theme/colors";
+import { DatePicker } from "@/components/DatePicker";
 import { spacing } from "@/theme/spacing";
 
 let ImagePicker: any = null;
@@ -227,15 +228,12 @@ export default function ListPetScreen() {
           </View>
 
           {/* Date of Birth */}
-          <TextInput
-            label="Date of Birth (YYYY-MM-DD)"
-            mode="outlined"
+          <DatePicker
+            label="Date of Birth"
             value={dob}
-            onChangeText={setDob}
-            style={styles.input}
-            keyboardType="numeric"
+            onChange={setDob}
             placeholder="e.g. 2022-06-15"
-            left={<TextInput.Icon icon="calendar" />}
+            maxDate={new Date()}
           />
           <Text style={styles.dobHint}>
             Age will be calculated automatically from the date of birth.
@@ -281,17 +279,16 @@ export default function ListPetScreen() {
                 style={styles.input} left={<TextInput.Icon icon="shield-check" />}
                 placeholder="e.g. Rabies, DHPPiL"
               />
-              <TextInput
-                label="Date Given * (YYYY-MM-DD)" mode="outlined"
-                value={v.date} onChangeText={(t) => updateVax(i, "date", t)}
-                style={styles.input} keyboardType="numeric"
-                left={<TextInput.Icon icon="calendar" />}
+              <DatePicker
+                label="Date Given *"
+                value={v.date}
+                onChange={(t) => updateVax(i, "date", t)}
+                maxDate={new Date()}
               />
-              <TextInput
-                label="Next Due Date (YYYY-MM-DD, optional)" mode="outlined"
-                value={v.nextDue} onChangeText={(t) => updateVax(i, "nextDue", t)}
-                style={styles.input} keyboardType="numeric"
-                left={<TextInput.Icon icon="calendar-clock" />}
+              <DatePicker
+                label="Next Due Date (optional)"
+                value={v.nextDue}
+                onChange={(t) => updateVax(i, "nextDue", t)}
               />
             </View>
           ))}

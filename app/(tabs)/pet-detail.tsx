@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {
-  Alert, Image, Modal, ScrollView, StatusBar,
+  Alert, Image, Modal, ScrollView, Share, StatusBar,
   StyleSheet, TextInput as RNTextInput,
   TouchableOpacity, View,
 } from "react-native";
@@ -70,6 +70,20 @@ export default function PetDetailScreen() {
     ? `adopt_${pet.listingId}_${userId}`
     : "";
 
+  // ── Share listing ─────────────────────────────────────────────────────────
+  async function handleShare() {
+    try {
+      await Share.share({
+        title: `Adopt ${pet.name} on PawPal`,
+        message: `Meet ${pet.name} — a ${pet.breed} looking for a forever home in ${pet.location}! 🐾
+
+Find them on PawPal: https://pawpal.in/adopt/${pet.listingId}`,
+      });
+    } catch (e: any) {
+      console.warn("Share error:", e.message);
+    }
+  }
+
   // ── Send adoption inquiry ────────────────────────────────────────────────
   async function handleSendInquiry() {
     if (!message.trim()) { Alert.alert("Write a message first."); return; }
@@ -133,9 +147,16 @@ export default function PetDetailScreen() {
           <TouchableOpacity style={styles.iconBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <Ionicons name="arrow-back" size={24} color="#FFF" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setIsFavorite(!isFavorite)} activeOpacity={0.7}>
-            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={isFavorite ? "#E53E3E" : "#FFF"} />
-          </TouchableOpacity>
+          <View style={styles.topRight}>
+            {isAdoptable && (
+              <TouchableOpacity style={styles.iconBtn} onPress={handleShare} activeOpacity={0.7}>
+                <Ionicons name="share-outline" size={24} color="#FFF" />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.iconBtn} onPress={() => setIsFavorite(!isFavorite)} activeOpacity={0.7}>
+              <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={isFavorite ? "#E53E3E" : "#FFF"} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Card */}
@@ -403,6 +424,7 @@ const styles = StyleSheet.create({
   quickPills:  { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 8 },
   quickPill:   { flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: colors.primaryContainer + "60", paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 },
   quickPillText: { fontSize: 12, fontWeight: "600", color: colors.primary },
+  shelterTouchRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   shelterRow:  { flexDirection: "row", alignItems: "center", gap: spacing.sm, marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.outlineVariant + "30" },
   shelterIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primaryContainer, alignItems: "center", justifyContent: "center" },
   shelterLabel:{ fontSize: 11, color: colors.onSurfaceVariant },

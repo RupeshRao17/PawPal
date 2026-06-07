@@ -11,6 +11,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { usePetStore, type Pet } from "@/stores/pet-store";
 import { isSupabaseConfigured, OFFLINE_HINT, supabase } from "@/lib/supabase";
 import { colors } from "@/theme/colors";
+import { DatePicker } from "@/components/DatePicker";
 import { spacing } from "@/theme/spacing";
 
 let ImagePicker: any = null;
@@ -55,7 +56,8 @@ async function uploadAsset(asset: any, petId: string): Promise<string | null> {
       .from("pet-photos")
       .upload(path, arrayBuffer, { upsert: true, contentType: mimeType });
     if (error) { console.warn("Upload failed:", error.message); return null; }
-    return supabase.storage.from("pet-photos").getPublicUrl(path).data.publicUrl;
+    const { publicUrl } = supabase.storage.from("pet-photos").getPublicUrl(path).data;
+    return `${publicUrl}?t=${Date.now()}`;
   } catch (e) {
     console.warn("Upload error:", e);
     return null;
@@ -304,8 +306,7 @@ export default function PetsScreen() {
               {/* Breed + DOB */}
               <TextInput label="Breed" mode="outlined" value={breed} onChangeText={setBreed}
                 style={styles.input} left={<TextInput.Icon icon="dna" />} placeholder="e.g. Golden Retriever" />
-              <TextInput label="Date of Birth (YYYY-MM-DD)" mode="outlined" value={dob} onChangeText={setDob}
-                style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar" />} placeholder="e.g. 2022-03-15" />
+              <DatePicker label="Date of Birth" value={dob} onChange={setDob} maxDate={new Date()} placeholder="e.g. 2022-03-15" />
 
               {/* Gender */}
               <Text style={styles.fieldLabel}>Gender</Text>

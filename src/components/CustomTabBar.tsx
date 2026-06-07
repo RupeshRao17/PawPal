@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
+import { useHealthStore } from '@/stores/health-store';
 
 interface Props { state: any; descriptors: any; navigation: any; }
 
@@ -15,6 +16,7 @@ const RIGHT_TABS = [
 ];
 
 export function CustomTabBar({ state, navigation }: Props) {
+  const overdueCount = useHealthStore((s) => s.overdueCount);
   function press(routeName: string) {
     const idx = state.routes.findIndex((r: any) => r.name === routeName);
     if (idx === -1) return;
@@ -96,6 +98,8 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: colors.primary },
   label:     { fontSize: 9, fontWeight: '600', color: colors.outlineVariant },
   labelActive: { color: colors.onPrimary },
+  badge:      { position: 'absolute', top: -5, right: -7, minWidth: 16, height: 16, borderRadius: 8, backgroundColor: colors.error, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 2, borderWidth: 1.5, borderColor: colors.onSurface },
+  badgeTxt:   { fontSize: 8, fontWeight: '800', color: '#fff' },
   fab: {
     position: 'absolute',
     bottom: 10,               // center button pops 10px above the pill top

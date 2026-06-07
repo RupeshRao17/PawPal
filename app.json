@@ -31,13 +31,14 @@
       "expo-asset"
     ],
     "scheme": "pawpal",
-    "extra": {
-      "eas": {
-        "projectId": "replace-with-eas-project-id"
-      }
-    },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5dbbc25b-a040-4327-852b-04ec4593289f"
+      }
     }
   }
 }

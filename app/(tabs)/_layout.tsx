@@ -1,7 +1,6 @@
 import { Redirect, Tabs } from "expo-router";
 import { View } from "react-native";
 import { CustomTabBar } from "@/components/CustomTabBar";
-import { FloatingPawBot } from "@/components/FloatingPawBot";
 import { useAuthStore } from "@/stores/auth-store";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -19,16 +18,16 @@ export default function TabsLayout() {
         <Tabs.Screen name="profile"   options={{ title: "Profile" }} />
 
         {/* ── Hidden — navigated programmatically ── */}
-        <Tabs.Screen name="health"     options={{ href: null }} />
-        <Tabs.Screen name="vets"       options={{ href: null }} />
-        <Tabs.Screen name="chats"      options={{ href: null }} />
-        <Tabs.Screen name="adoption"   options={{ href: null }} />
-        <Tabs.Screen name="list-pet"   options={{ href: null }} />
-        <Tabs.Screen name="pet-detail" options={{ href: null }} />
-        <Tabs.Screen name="adopt-chat" options={{ href: null }} />
-        <Tabs.Screen name="pawbot"     options={{ href: null }} />
+        <Tabs.Screen name="health"           options={{ href: null }} />
+        <Tabs.Screen name="vets"             options={{ href: null }} />
+        <Tabs.Screen name="chats"            options={{ href: null }} />
+        <Tabs.Screen name="adoption"         options={{ href: null }} />
+        <Tabs.Screen name="list-pet"         options={{ href: null }} />
+        <Tabs.Screen name="pet-detail"       options={{ href: null }} />
+        <Tabs.Screen name="adopt-chat"       options={{ href: null }} />
+        <Tabs.Screen name="breed-guide"      options={{ href: null }} />
+        <Tabs.Screen name="shelter-profile"  options={{ href: null }} />
       </Tabs>
-      <FloatingPawBot />
     </View>
   );
 }

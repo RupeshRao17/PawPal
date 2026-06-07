@@ -9,6 +9,8 @@ import { useAuthStore } from "@/stores/auth-store";
 import { usePetStore } from "@/stores/pet-store";
 import { isSupabaseConfigured, OFFLINE_HINT, supabase } from "@/lib/supabase";
 import { colors } from "@/theme/colors";
+import { DatePicker } from "@/components/DatePicker";
+import { useHealthStore } from "@/stores/health-store";
 import { spacing } from "@/theme/spacing";
 import { EmptyState } from "@/components/EmptyState";
 
@@ -47,6 +49,7 @@ type UpdatingVaccine = { id: string; name: string } | null;
 export default function HealthScreen() {
   const session = useAuthStore((s) => s.session);
   const { pets, activePet, fetchPets, setActivePet } = usePetStore();
+  const fetchOverdueCount = useHealthStore((s) => s.fetchOverdueCount);
   const [tab, setTab] = useState<Tab>("vaccinations");
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -75,7 +78,12 @@ export default function HealthScreen() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  useEffect(() => { if (session?.user) fetchPets(session.user.id); }, [session]);
+  useEffect(() => {
+    if (session?.user) {
+      fetchPets(session.user.id);
+      fetchOverdueCount(session.user.id);
+    }
+  }, [session]);
   useEffect(() => { if (activePet) loadHealthData(activePet.id); }, [activePet, tab]);
 
   async function loadHealthData(petId: string) {
@@ -305,18 +313,8 @@ export default function HealthScreen() {
               <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, marginBottom: spacing.sm }}>
                 {updatingVaccine?.name}
               </Text>
-              <TextInput
-                label="Date Administered * (YYYY-MM-DD)"
-                mode="outlined" value={updateAdminDate} onChangeText={setUpdateAdminDate}
-                style={styles.input} keyboardType="numeric"
-                left={<TextInput.Icon icon="calendar" />} placeholder={today}
-              />
-              <TextInput
-                label="Next Due Date (YYYY-MM-DD)"
-                mode="outlined" value={updateNextDue} onChangeText={setUpdateNextDue}
-                style={styles.input} keyboardType="numeric"
-                left={<TextInput.Icon icon="calendar-clock" />}
-              />
+              <DatePicker label="Date Administered *" value={updateAdminDate} onChange={setUpdateAdminDate} maxDate={new Date()} />
+              <DatePicker label="Next Due Date (optional)" value={updateNextDue} onChange={setUpdateNextDue} />
               <View style={styles.modalActions}>
                 <Button mode="outlined" onPress={() => setUpdatingVaccine(null)} style={styles.modalBtn}>Cancel</Button>
                 <Button mode="contained" onPress={handleUpdateVaccine} loading={updateSaving} disabled={updateSaving} style={styles.modalBtn}>Save</Button>
@@ -341,21 +339,21 @@ export default function HealthScreen() {
 
               {tab === "vaccinations" && (<>
                 <TextInput label="Vaccine Name *" mode="outlined" value={vaccineName} onChangeText={setVaccineName} style={styles.input} left={<TextInput.Icon icon="shield-check" />} />
-                <TextInput label="Date Administered * (YYYY-MM-DD)" mode="outlined" value={adminDate} onChangeText={setAdminDate} style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar" />} placeholder={today} />
-                <TextInput label="Next Due Date (YYYY-MM-DD)" mode="outlined" value={nextDue} onChangeText={setNextDue} style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar-clock" />} />
+                <DatePicker label="Date Administered *" value={adminDate} onChange={setAdminDate} maxDate={new Date()} />
+                <DatePicker label="Next Due Date (optional)" value={nextDue} onChange={setNextDue} />
               </>)}
 
               {tab === "medications" && (<>
                 <TextInput label="Medication Name *" mode="outlined" value={medName} onChangeText={setMedName} style={styles.input} left={<TextInput.Icon icon="pill" />} />
                 <TextInput label="Dosage (e.g. 10mg)" mode="outlined" value={dosage} onChangeText={setDosage} style={styles.input} left={<TextInput.Icon icon="eyedropper" />} />
                 <TextInput label="Frequency (e.g. Once daily)" mode="outlined" value={frequency} onChangeText={setFrequency} style={styles.input} left={<TextInput.Icon icon="clock-outline" />} />
-                <TextInput label="Start Date * (YYYY-MM-DD)" mode="outlined" value={startDate} onChangeText={setStartDate} style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar" />} placeholder={today} />
-                <TextInput label="End Date (blank = ongoing)" mode="outlined" value={endDate} onChangeText={setEndDate} style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar-end" />} />
+                <DatePicker label="Start Date *" value={startDate} onChange={setStartDate} maxDate={new Date()} />
+                <DatePicker label="End Date (blank = ongoing)" value={endDate} onChange={setEndDate} />
               </>)}
 
               {tab === "weight" && (<>
                 <TextInput label="Weight (kg) *" mode="outlined" value={weightKg} onChangeText={setWeightKg} style={styles.input} keyboardType="decimal-pad" left={<TextInput.Icon icon="scale" />} />
-                <TextInput label="Date (YYYY-MM-DD)" mode="outlined" value={logDate} onChangeText={setLogDate} style={styles.input} keyboardType="numeric" left={<TextInput.Icon icon="calendar" />} />
+                <DatePicker label="Date" value={logDate} onChange={setLogDate} maxDate={new Date()} />
               </>)}
 
               <View style={styles.modalActions}>
