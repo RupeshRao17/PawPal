@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   Image, RefreshControl, ScrollView,
   StyleSheet, TouchableOpacity, View,
@@ -66,37 +67,9 @@ export default function ChatsScreen() {
   const load = useCallback(async () => {
     if (!supabase || !userId) { setLoading(false); return; }
 
-    // ── 1. My outgoing inquiries (I applied to adopt) ──────────────────────
-    const { data: appData } = await supabase
-      .from("adoption_applications")
-      .select(`
-        id, listing_id, status, applied_at, applicant_id,
-        adoption_listings (
-          id, shelter_id, city,
-          pets ( name, photo_url ),
-          profiles ( full_name )
-        )
-      `)
-      .eq("applicant_id", userId)
-      .order("applied_at", { ascending: false });
-
-    // ── 2. My listings + all their inquiries (I posted the pet) ───────────
-    const { data: listingData } = await supabase
-      .from("adoption_listings")
-      .select(`
-        id, city, status,
-        pets ( id, name, photo_url ),
-        adoption_applications (
-          id, applicant_id, status, applied_at,
-          profiles ( full_name )
-        )
-      `)
-      .eq("shelter_id", userId)
-      .order("listed_at", { ascending: false });
-
-    // ── Fetch last message for each channel ────────────────────────────────
+    // ── Helper: fetch last message for a channel ─────────────────────────
     async function getLastMsg(channelId: string) {
-      if (!supabase) return { content: null, sent_at: null };
+      if (!supabase) return { content: null as string | null, sent_at: null as string | null };
       const { data } = await supabase
         .from("messages")
         .select("content, sent_at")
@@ -107,10 +80,48 @@ export default function ChatsScreen() {
       return { content: data?.content ?? null, sent_at: data?.sent_at ?? null };
     }
 
+    // ── 1. My outgoing inquiries (I applied to adopt) ──────────────────────
+    const { data: appRows } = await supabase
+      .from("adoption_applications")
+      .select("id, listing_id, status, applied_at, applicant_id")
+      .eq("applicant_id", userId)
+      .order("applied_at", { ascending: false });
+
+    // Collect unique listing IDs and fetch listing + pet + shelter data
+    const appListingIds = [...new Set((appRows ?? []).map((a: any) => a.listing_id))];
+    let appListingsMap: Record<string, any> = {};
+    if (appListingIds.length > 0) {
+      const { data: alRows } = await supabase
+        .from("adoption_listings")
+        .select("id, shelter_id, city, pet_id")
+        .in("id", appListingIds);
+      const petIds = [...new Set((alRows ?? []).map((r: any) => r.pet_id))];
+      const shelterIds = [...new Set((alRows ?? []).map((r: any) => r.shelter_id))];
+
+      // Fetch pets and profiles separately to avoid RLS join issues
+      let petsMap: Record<string, any> = {};
+      let profilesMap: Record<string, any> = {};
+      if (petIds.length > 0) {
+        const { data: petRows } = await supabase.from("pets").select("id, name, photo_url").in("id", petIds);
+        (petRows ?? []).forEach((p: any) => { petsMap[p.id] = p; });
+      }
+      if (shelterIds.length > 0) {
+        const { data: profRows } = await supabase.from("profiles").select("id, full_name").in("id", shelterIds);
+        (profRows ?? []).forEach((p: any) => { profilesMap[p.id] = p; });
+      }
+      (alRows ?? []).forEach((al: any) => {
+        appListingsMap[al.id] = {
+          ...al,
+          pets: petsMap[al.pet_id] ?? null,
+          profiles: profilesMap[al.shelter_id] ?? null,
+        };
+      });
+    }
+
     // Build outgoing list
     const outList: Inquiry[] = [];
-    for (const app of (appData ?? []) as any[]) {
-      const al      = app.adoption_listings;
+    for (const app of (appRows ?? []) as any[]) {
+      const al      = appListingsMap[app.listing_id];
       const pet     = al?.pets;
       const shelter = al?.profiles;
       const chanId  = `adopt_${app.listing_id}_${userId}`;
@@ -130,11 +141,51 @@ export default function ChatsScreen() {
       });
     }
 
+    // ── 2. My listings + all their inquiries (I posted the pet) ───────────
+    const { data: myListingRows } = await supabase
+      .from("adoption_listings")
+      .select("id, city, status, pet_id")
+      .eq("shelter_id", userId)
+      .order("listed_at", { ascending: false });
+
+    // Fetch pets for my listings
+    const myPetIds = [...new Set((myListingRows ?? []).map((r: any) => r.pet_id))];
+    let myPetsMap: Record<string, any> = {};
+    if (myPetIds.length > 0) {
+      const { data: petRows } = await supabase.from("pets").select("id, name, photo_url").in("id", myPetIds);
+      (petRows ?? []).forEach((p: any) => { myPetsMap[p.id] = p; });
+    }
+
+    // Fetch applications for each of my listings
+    const myListIds = (myListingRows ?? []).map((r: any) => r.id);
+    let myAppsMap: Record<string, any[]> = {};
+    if (myListIds.length > 0) {
+      const { data: myAppRows } = await supabase
+        .from("adoption_applications")
+        .select("id, listing_id, applicant_id, status, applied_at")
+        .in("listing_id", myListIds)
+        .order("applied_at", { ascending: false });
+      (myAppRows ?? []).forEach((a: any) => {
+        if (!myAppsMap[a.listing_id]) myAppsMap[a.listing_id] = [];
+        myAppsMap[a.listing_id].push(a);
+      });
+    }
+
+    // Fetch applicant profiles
+    const applicantIds = [...new Set(
+      Object.values(myAppsMap).flat().map((a: any) => a.applicant_id)
+    )];
+    let applicantProfilesMap: Record<string, any> = {};
+    if (applicantIds.length > 0) {
+      const { data: profRows } = await supabase.from("profiles").select("id, full_name").in("id", applicantIds);
+      (profRows ?? []).forEach((p: any) => { applicantProfilesMap[p.id] = p; });
+    }
+
     // Build my listings with incoming inquiries
     const listings: MyListing[] = [];
-    for (const listing of (listingData ?? []) as any[]) {
-      const pet      = listing.pets;
-      const apps     = (listing.adoption_applications ?? []) as any[];
+    for (const listing of (myListingRows ?? []) as any[]) {
+      const pet   = myPetsMap[listing.pet_id] ?? null;
+      const apps  = myAppsMap[listing.id] ?? [];
       const inquiries: Inquiry[] = [];
       for (const app of apps) {
         const chanId = `adopt_${listing.id}_${app.applicant_id}`;
@@ -145,7 +196,7 @@ export default function ChatsScreen() {
           channelId:   chanId,
           petName:     pet?.name ?? "Pet",
           petPhoto:    pet?.photo_url ?? null,
-          otherName:   app.profiles?.full_name ?? "Applicant",
+          otherName:   applicantProfilesMap[app.applicant_id]?.full_name ?? "Applicant",
           status:      app.status,
           lastMessage: last.content,
           lastTime:    last.sent_at,
@@ -171,6 +222,14 @@ export default function ChatsScreen() {
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Reload every time the Chats tab comes into focus (e.g. after sending a
+  // message from a pet listing and navigating back here).
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   function openChat(item: Inquiry) {
     router.push({
